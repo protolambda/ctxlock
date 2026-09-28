@@ -5,8 +5,6 @@ import (
 	"sync"
 	"testing"
 	"time"
-
-	"github.com/stretchr/testify/require"
 )
 
 func TestLock(t *testing.T) {
@@ -14,111 +12,111 @@ func TestLock(t *testing.T) {
 		t.Parallel()
 		var x Lock
 		x.Lock()
-		require.Len(t, x.write, 1)
+		checkChannelLen(t, x.write, 1)
 		x.Unlock()
-		require.Len(t, x.write, 0)
+		checkChannelLen(t, x.write, 0)
 	})
 	t.Run("write repeat", func(t *testing.T) {
 		t.Parallel()
 		var x Lock
 		x.Lock()
-		require.Len(t, x.write, 1)
+		checkChannelLen(t, x.write, 1)
 		x.Unlock()
-		require.Len(t, x.write, 0)
+		checkChannelLen(t, x.write, 0)
 		x.Lock()
-		require.Len(t, x.write, 1)
+		checkChannelLen(t, x.write, 1)
 		x.Unlock()
-		require.Len(t, x.write, 0)
+		checkChannelLen(t, x.write, 0)
 	})
 	t.Run("write unlock panic", func(t *testing.T) {
 		t.Parallel()
 		var x Lock
-		require.Panics(t, func() {
+		checkPanics(t, func() {
 			x.Unlock()
 		})
-		require.Len(t, x.write, 0)
+		checkChannelLen(t, x.write, 0)
 	})
 	t.Run("too many write unlocks", func(t *testing.T) {
 		t.Parallel()
 		var x Lock
 		x.Lock()
-		require.Len(t, x.write, 1)
+		checkChannelLen(t, x.write, 1)
 		x.Unlock()
-		require.Len(t, x.write, 0)
-		require.Panics(t, func() {
+		checkChannelLen(t, x.write, 0)
+		checkPanics(t, func() {
 			x.Unlock()
 		})
-		require.Len(t, x.write, 0)
+		checkChannelLen(t, x.write, 0)
 	})
 	t.Run("read basic", func(t *testing.T) {
 		t.Parallel()
 		var x Lock
 		x.RLock()
-		require.Len(t, x.write, 1)
-		require.Len(t, x.readers, 1)
+		checkChannelLen(t, x.write, 1)
+		checkChannelLen(t, x.readers, 1)
 		x.RUnlock()
-		require.Len(t, x.write, 0)
-		require.Len(t, x.readers, 0)
+		checkChannelLen(t, x.write, 0)
+		checkChannelLen(t, x.readers, 0)
 	})
 	t.Run("read repeat", func(t *testing.T) {
 		t.Parallel()
 		var x Lock
 		x.RLock()
-		require.Len(t, x.write, 1)
-		require.Len(t, x.readers, 1)
+		checkChannelLen(t, x.write, 1)
+		checkChannelLen(t, x.readers, 1)
 		x.RUnlock()
-		require.Len(t, x.write, 0)
-		require.Len(t, x.readers, 0)
+		checkChannelLen(t, x.write, 0)
+		checkChannelLen(t, x.readers, 0)
 		x.RLock()
-		require.Len(t, x.write, 1)
-		require.Len(t, x.readers, 1)
+		checkChannelLen(t, x.write, 1)
+		checkChannelLen(t, x.readers, 1)
 		x.RUnlock()
-		require.Len(t, x.write, 0)
-		require.Len(t, x.readers, 0)
+		checkChannelLen(t, x.write, 0)
+		checkChannelLen(t, x.readers, 0)
 	})
 	t.Run("read unlock panic", func(t *testing.T) {
 		t.Parallel()
 		var x Lock
-		require.Panics(t, func() {
+		checkPanics(t, func() {
 			x.RUnlock()
 		})
-		require.Len(t, x.write, 0)
+		checkChannelLen(t, x.write, 0)
 	})
 	t.Run("too many read unlocks", func(t *testing.T) {
 		t.Parallel()
 		var x Lock
 		x.RLock()
-		require.Len(t, x.write, 1)
+		checkChannelLen(t, x.write, 1)
 		x.RUnlock()
-		require.Len(t, x.write, 0)
-		require.Panics(t, func() {
+		checkChannelLen(t, x.write, 0)
+		checkPanics(t, func() {
 			x.RUnlock()
 		})
-		require.Len(t, x.write, 0)
+		checkChannelLen(t, x.write, 0)
 	})
 	t.Run("read multiple", func(t *testing.T) {
 		t.Parallel()
 		var x Lock
 		x.RLock()
-		require.Len(t, x.write, 1)
-		require.Len(t, x.readers, 1)
+		checkChannelLen(t, x.write, 1)
+		checkChannelLen(t, x.readers, 1)
 		x.RLock()
-		require.Len(t, x.write, 1)
-		require.Len(t, x.readers, 1)
+		checkChannelLen(t, x.write, 1)
+		checkChannelLen(t, x.readers, 1)
 		x.RUnlock()
-		require.Len(t, x.write, 1)
-		require.Len(t, x.readers, 1)
+		checkChannelLen(t, x.write, 1)
+		checkChannelLen(t, x.readers, 1)
 		x.RUnlock()
-		require.Len(t, x.write, 0)
-		require.Len(t, x.readers, 0)
+		checkChannelLen(t, x.write, 0)
+		checkChannelLen(t, x.readers, 0)
 	})
 	t.Run("ctx lock", func(t *testing.T) {
 		t.Parallel()
 		var x Lock
-		require.NoError(t, x.LockCtx(context.Background()))
-		require.Len(t, x.write, 1)
+		checkError(t, x.LockCtx(context.Background()), nil)
+		checkChannelLen(t, x.write, 1)
 		x.Unlock()
-		require.Len(t, x.write, 0)
+		checkChannelLen(t, x.write, 0)
 	})
 	t.Run("ctx instant cancel lock", func(t *testing.T) {
 		t.Parallel()
@@ -129,8 +127,7 @@ func TestLock(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel() // instantly cancel
 		err := x.LockCtx(ctx)
-		require.NotNil(t, err)
-		require.Equal(t, ctx.Err(), err)
+		checkError(t, err, ctx.Err())
 	})
 	t.Run("ctx later cancel lock", func(t *testing.T) {
 		t.Parallel()
@@ -141,18 +138,17 @@ func TestLock(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*4)
 		defer cancel()
 		err := x.LockCtx(ctx)
-		require.NotNil(t, err)
-		require.Equal(t, ctx.Err(), err)
+		checkError(t, err, ctx.Err())
 	})
 	t.Run("ctx rlock", func(t *testing.T) {
 		t.Parallel()
 		var x Lock
-		require.NoError(t, x.RLockCtx(context.Background()))
-		require.Len(t, x.write, 1)
-		require.Len(t, x.readers, 1)
+		checkError(t, x.RLockCtx(context.Background()), nil)
+		checkChannelLen(t, x.write, 1)
+		checkChannelLen(t, x.readers, 1)
 		x.RUnlock()
-		require.Len(t, x.write, 0)
-		require.Len(t, x.readers, 0)
+		checkChannelLen(t, x.write, 0)
+		checkChannelLen(t, x.readers, 0)
 	})
 	t.Run("ctx instant cancel rlock", func(t *testing.T) {
 		t.Parallel()
@@ -163,8 +159,7 @@ func TestLock(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel() // instantly cancel
 		err := x.RLockCtx(ctx)
-		require.NotNil(t, err)
-		require.Equal(t, ctx.Err(), err)
+		checkError(t, err, ctx.Err())
 	})
 	t.Run("ctx later cancel rlock", func(t *testing.T) {
 		t.Parallel()
@@ -175,33 +170,32 @@ func TestLock(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*4)
 		defer cancel()
 		err := x.RLockCtx(ctx)
-		require.NotNil(t, err)
-		require.Equal(t, ctx.Err(), err)
+		checkError(t, err, ctx.Err())
 	})
 	t.Run("ctx multi rlock", func(t *testing.T) {
 		t.Parallel()
 		var x Lock
-		require.NoError(t, x.RLockCtx(context.Background()))
-		require.NoError(t, x.RLockCtx(context.Background()))
-		require.NoError(t, x.RLockCtx(context.Background()))
-		require.Len(t, x.write, 1)
+		checkError(t, x.RLockCtx(context.Background()), nil)
+		checkError(t, x.RLockCtx(context.Background()), nil)
+		checkError(t, x.RLockCtx(context.Background()), nil)
+		checkChannelLen(t, x.write, 1)
 		x.RUnlock()
 		x.RUnlock()
-		require.Len(t, x.write, 1)
+		checkChannelLen(t, x.write, 1)
 		x.RUnlock()
-		require.Len(t, x.write, 0)
+		checkChannelLen(t, x.write, 0)
 	})
 	t.Run("write lock nil ctx", func(t *testing.T) {
 		t.Parallel()
 		var x Lock
-		require.Panics(t, func() {
+		checkPanics(t, func() {
 			_ = x.LockCtx(nil) //nolint:all
 		})
 	})
 	t.Run("read lock nil ctx", func(t *testing.T) {
 		t.Parallel()
 		var x Lock
-		require.Panics(t, func() {
+		checkPanics(t, func() {
 			_ = x.RLockCtx(nil) //nolint:all
 		})
 	})
@@ -215,7 +209,7 @@ func TestLock(t *testing.T) {
 			x.Unlock() // to unblock the RUnlock
 			complete <- struct{}{}
 		}()
-		require.Panics(t, func() {
+		checkPanics(t, func() {
 			x.RUnlock()
 		})
 		<-complete
@@ -224,7 +218,7 @@ func TestLock(t *testing.T) {
 		t.Parallel()
 		var x Lock
 		x.RLock()
-		require.Panics(t, func() {
+		checkPanics(t, func() {
 			x.Unlock()
 		})
 	})
@@ -236,6 +230,7 @@ func TestLock(t *testing.T) {
 		wg.Add(1000)
 		// spawn 1000 routines either writing or reading
 		for i := 0; i < 1000; i++ {
+			i := i
 			if i%2 == 0 {
 				// writer sets to illegal value temporarily
 				go func() {
