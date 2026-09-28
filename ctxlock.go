@@ -1,3 +1,5 @@
+// Package ctxlock provides a read-write lock whose lock attempts can be canceled
+// with a context.
 package ctxlock
 
 import (
